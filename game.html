@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="gamestyle.css" />
+</head>
+<body onload="startGame()">
+<script>
+var mydino;
+var mycactus = [];
+var myscore;
+var mybackground;
+
+function startGame() {
+    myGameArea.start();
+    //mybackground = new component(739, 415, "background.jpeg", 0, 0, "image");
+    myscore = new component("30px", "Consolas", "black", 280, 40, "text");
+    //myline = new component(8000, 1, "black", 0, 175);
+    //mycactus = new component(20, 40, "green", 700, 135);
+    mydino = new component(60, 60, "dino.png", 20, 145, "image");
+}
+
+var myGameArea = {
+    canvas : document.createElement("canvas"),
+    start : function() {
+        this.canvas.width = 800;
+        this.canvas.height = 200;
+        this.context = this.canvas.getContext("2d");
+        this.context.moveTo(0,175);
+        this.context.lineTo(800,175);
+        this.context.stroke();
+        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+        this.frameNo = 0;
+        this.interval = setInterval(updateGameArea, 20);
+    },
+    clear : function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    },
+    stop : function() {
+        classInterval(this.interval);
+    }
+}
+
+function everyinterval(n) {
+  if ((myGameArea.frameNo / n) % 1 == 0) {return true;}
+  return false;
+}
+
+function component(width, height, color, x, y, type) {
+    this.type = type;
+    if (type == "image") {
+        this.image = new Image();
+        this.image.src = color;
+    }
+    this.width = width;
+    this.height = height;
+    this.speedY = 0;
+    this.x = x;
+    this.y = y;
+    this.gravity = 0.05;
+    this.gravityspeed = 0;
+    this.update = function() {
+        ctx = myGameArea.context;
+        if (type == "image") {
+        ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        } 
+        else if(this.type == "text") {
+            ctx.font = this.width + " " + this.height;
+            ctx.fillStyle = color;
+            ctx.fillText(this.text, this.x, this.y);
+        }
+        else {
+            ctx.fillStyle = color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+        }
+    }
+  this.newPos = function() {
+      this.gravityspeed += this.gravity;
+      this.y += this.speedY + this.gravityspeed;
+      this.hitbottom();
+  }
+  this.hitbottom = function() {
+      var rockbottom = myGameArea.canvas.height - this.height;
+      if(this.y > rockbottom) {
+          this.y = rockbottom;
+          this.gravityspeed = 0;
+      }
+  }
+  this.crashWith = function(otherobj) {
+    var myleft = this.x;
+    var myright = this.x + (this.width);
+    var mytop = this.y;
+    var mybottom = this.y + (this.height);
+    var otherleft = otherobj.x;
+    var otherright = otherobj.x + (otherobj.width);
+    var othertop = otherobj.y;
+    var otherbottom = otherobj.y + (otherobj.height);
+    var crash = true;
+    if ((mybottom < othertop) ||
+    (mytop > otherbottom) ||
+    (myright < otherleft) ||
+    (myleft > otherright)) {
+      crash = false;
+    }
+    return crash;
+  }
+}
+
+function updateGameArea() {
+    var x, height, gap, minHeight, maxHeight, minGap, maxGap;
+    for(i = 0; i < mycactus.length; i += 1) {
+        if(mydino.crashWith(mycactus[i])) {
+            myGameArea.stop();
+            return;
+        }
+    }
+    myGameArea.clear();
+    myGameArea.frameNo += 1;
+    if(myGameArea.frameNo == 1 || everyinterval(300)) {
+        x = myGameArea.canvas.width;
+        minHeight = 150;
+        maxHeight = 190;
+        height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+        mycactus.push(new component(20, x - height, "green", x, height));
+    }
+    for (i = 0; i < mycactus.length; i += 1) {
+        mycactus[i].x -= 1;
+        mycactus[i].update();
+    }
+    myscore.text = "SCORE: " + myGameArea.frameNo;
+    myscore.update();
+    mydino.newPos();    
+    mydino.update();
+}
+
+function accelerate(n) {
+    mydino.gravity = n;
+}
+
+function clearmove() {
+    mydino.speedY = 0;
+}
+</script>
+<div style="text-align:center;width:480px;">
+    <button onmousedown="accelerate(-1.5)" onmouseup="accelerate(0.1)">ACCELERATE</button>
+  </div>
+</body>
+</html>
